@@ -13,10 +13,7 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.shape.Polygon;
 import javafx.stage.Stage;
 
-public class App extends Application {
-    String[] cardNames = {  "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten",
-                            "jack", "queen", "king", "ace"};
-    
+public class App extends Application { 
     public static void main(String[] args) {
         launch(args);
     }
@@ -150,41 +147,62 @@ public class App extends Application {
         return triangle;
     }
 
-    private int getScore(CardJavaFX[] cards) {
+    private int getScore(Card[] cards) {
         if (cards.length != 5) {
             throw new IllegalArgumentException("Card Array length should be 5");
         }
-        CardJavaFX[] sortedCards = cards.clone();
-        // sort the cards by value
-        for (int i = 0; i < sortedCards.length; i++) {
-            for (int j = i; j < sortedCards.length; j++) {
-                if (sortedCards[i].getValue() < sortedCards[j].getValue()) {
-                    CardJavaFX temp = sortedCards[i];
-                    sortedCards[i] = sortedCards[j];
-                    sortedCards[j] = temp;
-                }
+        Card[] sortedCards = Card.sort(cards);
+        boolean sameSuit = false;
+        boolean straight = false;
+        boolean fourOfAKind = false;
+        boolean fullHouse = false;
+        boolean threeOfAKind = false;
+        boolean twoPair = false;
+        boolean pair = false;
+
+
+        // convert ace to 14 if it is low
+        for (Card card : sortedCards) {
+            if (card.getValue() == 1) {
+                card.setValue(14);
+            }
+            // check if all cards are the same suit
+            if (card.getSuit() != sortedCards[0].getSuit()) {
+                sameSuit = false;
             }
         }
 
-        int max = 0;
-        for (CardJavaFX card : cards) {
-            if (card.getValue() > max) {
-                max = card.getValue();
+        // check for flush
+        for (int i = 0; i < sortedCards.length - 1; i++) {
+            Card card = sortedCards[i];
+            Card nextCard = sortedCards[i + 1];
+            if (card.getValue() != nextCard.getValue() - 1) {
+                break;
             }
         }
-
-        System.out.println("\nMax: " + max);
-        for (CardJavaFX card : sortedCards) {
-            System.out.print(card.getSuit().name() + " " + card.getValue() + ", ");
-            
-        }
-        System.out.println();
-
-        return cards[0].getValue() + cards[1].getValue() + cards[2].getValue() + cards[3].getValue() + cards[4].getValue();
-
-    }
-
-    // private void startRound() {
         
-    // }
+
+
+        if (straight) {
+            if (sameSuit) {
+                return 80;
+            } else {
+                return 40;
+            }
+        }else if (fourOfAKind) {
+            return 70;
+        } else if (fullHouse) {
+            return 60;
+        } else if (sameSuit) {
+            return 50;
+        } else if (threeOfAKind) {
+            return 30;
+        } else if (twoPair) {
+            return 20;
+        } else if (pair) {
+            return 10;
+        } else {
+            return 0; // high card
+        }
+    }
 }

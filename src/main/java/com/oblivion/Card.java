@@ -62,4 +62,19 @@ public class Card {
     public static int getRandomValue() {
         return (int) (Math.random() * 13) + 1;
     }
+
+    public static Card[] sort(Card[] cards) {
+        Card[] sortedCards = cards.clone();
+        // sort the cards by value
+        for (int i = 0; i < sortedCards.length; i++) {
+            for (int j = i; j < sortedCards.length; j++) {
+                if (sortedCards[i].getValue() < sortedCards[j].getValue()) {
+                    Card temp = sortedCards[i];
+                    sortedCards[i] = sortedCards[j];
+                    sortedCards[j] = temp;
+                }
+            }
+        }
+        return sortedCards;
+    }
 }
