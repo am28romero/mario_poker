@@ -1,5 +1,7 @@
 package com.oblivion;
 
+import com.oblivion.Card.Suit;
+
 import javafx.application.Application;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -42,10 +44,29 @@ public class App extends Application {
             grid.add(dealerCards[col].getStackPane(), col, 0);
         }
         
+        for (int col = 0; col < 5; col++) {
+                playerCards[col] = createPlayerCard();
+                final int cardIndex = col;
+                playerCards[col].getRectangle().setOnMouseClicked(event -> {
+                // Add your logic for rectangle click (toggle on/off) here
+                System.out.println("Player card " + (cardIndex + 1) + " toggled" +
+                                    (playerCards[cardIndex].toggleSelected() ? " on" : " off"));
+            });
+            grid.add(playerCards[col].getStackPane(), col, 2);
+        }
+
+        playerCards[0].setCard(new Card(Suit.CLUBS, 1));
+        playerCards[1].setCard(new Card(Suit.CLUBS, 2));
+        playerCards[2].setCard(new Card(Suit.CLUBS, 3));
+        playerCards[3].setCard(new Card(Suit.CLUBS, 4));
+        playerCards[4].setCard(new Card(Suit.CLUBS, 5));
+        
+            
         // Add hold button
         Button holdButton = new Button("Hold");
         holdButton.setOnAction(event -> {
             System.out.println("Hold button pressed");
+
             for (CardJavaFX card : playerCards) {
                 if (card.isSelected()) {
                     card.setCard(deck.getNextCard());
@@ -64,17 +85,7 @@ public class App extends Application {
             dealerScoreLabel.setText(getScore(dealerCards) + "");
         });
         grid.add(holdButton, 2, 1);
-
-        for (int col = 0; col < 5; col++) {
-            playerCards[col] = createPlayerCard();
-            final int cardIndex = col;
-            playerCards[col].getRectangle().setOnMouseClicked(event -> {
-                // Add your logic for rectangle click (toggle on/off) here
-                System.out.println("Player card " + (cardIndex + 1) + " toggled" +
-                                    (playerCards[cardIndex].toggleSelected() ? " on" : " off"));
-            });
-            grid.add(playerCards[col].getStackPane(), col, 2);
-        }
+        
 
         // Add the score value of the current hand
         dealerScoreLabel.setVisible(false);
@@ -112,10 +123,6 @@ public class App extends Application {
         Rectangle rectangle = new Rectangle(46, 64);
         rectangle.setFill(Color.LIGHTGRAY);
         rectangle.setStroke(Color.BLACK);
-        rectangle.setOnMouseClicked(event -> {
-            // Add your logic for rectangle click (toggle on/off) here
-            System.out.println("Rectangle clicked");
-        });
         CardJavaFX card = new CardJavaFX(rectangle);
         return card;
     }
@@ -147,11 +154,17 @@ public class App extends Application {
         return triangle;
     }
 
-    private int getScore(Card[] cards) {
+    private int getScore(Card[] cards) { //*  disallow CardJavaFX from being passed in ***FIX*** *//
         if (cards.length != 5) {
             throw new IllegalArgumentException("Card Array length should be 5");
         }
         Card[] sortedCards = Card.sort(cards);
+
+        /*  First digit is the type of hand (high card, pair, two pair, three of a kind, straight, flush, full house, four of a kind, straight flush)
+            Second digit is the value of the highest pair card if there is 2 pairs
+            Third digit is the value of the first pair card or only pair card
+            Fourth digit is the value of the highest card that isnt part of a pair      */
+        int score = 0x0000;
         boolean sameSuit = false;
         boolean straight = false;
         boolean fourOfAKind = false;
@@ -159,50 +172,57 @@ public class App extends Application {
         boolean threeOfAKind = false;
         boolean twoPair = false;
         boolean pair = false;
+        int maxPair0 = 0;
+        int maxPair1 = 0;
+        int max = 0; // highest card that isnt part of a pair. 0 if all cards are part of a pair
 
-
-        // convert ace to 14 if it is low
+        // convert ace to 14
         for (Card card : sortedCards) {
             if (card.getValue() == 1) {
-                card.setValue(14);
+                card.setValue(14); 
             }
             // check if all cards are the same suit
             if (card.getSuit() != sortedCards[0].getSuit()) {
                 sameSuit = false;
             }
+            if (card.getValue() > max) {
+                max = card.getValue();
+            }
         }
+        score += max;
 
-        // check for flush
+        // check for straight
         for (int i = 0; i < sortedCards.length - 1; i++) {
             Card card = sortedCards[i];
             Card nextCard = sortedCards[i + 1];
-            if (card.getValue() != nextCard.getValue() - 1) {
-                break;
-            }
+            if (card.getValue() != nextCard.getValue() - 1) { break; }
+            if (i == sortedCards.length - 2) { straight = true; }
         }
         
-
+        
 
         if (straight) {
             if (sameSuit) {
-                return 80;
+                score += 0x8000;
             } else {
-                return 40;
+                score += 0x4000;
             }
         }else if (fourOfAKind) {
-            return 70;
+            score += 0x7000;
         } else if (fullHouse) {
-            return 60;
+            score += 0x6000;
         } else if (sameSuit) {
-            return 50;
+            score += 0x5000;
         } else if (threeOfAKind) {
-            return 30;
+            score += 0x3000;
         } else if (twoPair) {
-            return 20;
+            score += 0x2000;
         } else if (pair) {
-            return 10;
+            score += 0x1000;
         } else {
-            return 0; // high card
+            score += 0x0000; // high card
         }
+
+        return score;
     }
 }

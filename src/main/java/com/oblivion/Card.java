@@ -65,9 +65,9 @@ public class Card {
 
     public static Card[] sort(Card[] cards) {
         Card[] sortedCards = cards.clone();
-        // sort the cards by value
+        // sort the cards by descending value
         for (int i = 0; i < sortedCards.length; i++) {
-            for (int j = i; j < sortedCards.length; j++) {
+            for (int j = i + 1; j < sortedCards.length; j++) {
                 if (sortedCards[i].getValue() < sortedCards[j].getValue()) {
                     Card temp = sortedCards[i];
                     sortedCards[i] = sortedCards[j];
