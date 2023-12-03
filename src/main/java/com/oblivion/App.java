@@ -56,10 +56,10 @@ public class App extends Application {
         }
 
         playerCards[0].setCard(new Card(Suit.CLUBS, 1));
-        playerCards[1].setCard(new Card(Suit.CLUBS, 2));
-        playerCards[2].setCard(new Card(Suit.CLUBS, 3));
-        playerCards[3].setCard(new Card(Suit.CLUBS, 4));
-        playerCards[4].setCard(new Card(Suit.CLUBS, 5));
+        playerCards[1].setCard(new Card(Suit.CLUBS, 10));
+        playerCards[2].setCard(new Card(Suit.CLUBS, 13));
+        playerCards[3].setCard(new Card(Suit.CLUBS, 12));
+        playerCards[4].setCard(new Card(Suit.CLUBS, 11));
         
             
         // Add hold button
@@ -76,13 +76,15 @@ public class App extends Application {
                 card.getRectangle().setDisable(true);
                 holdButton.setDisable(true);
             }
-            playerScoreLabel.setText(getScore(playerCards) + "");
+            playerScoreLabel.setText(String.format("%06X", getScore(playerCards)) + "");
 
             for (CardJavaFX card : dealerCards) {
                 card.getLabel().setVisible(true);
             }
             dealerScoreLabel.setVisible(true);
-            dealerScoreLabel.setText(getScore(dealerCards) + "");
+            // int to string hex
+            // String.format("%04X", 0x0000);
+            dealerScoreLabel.setText(String.format("%06X", getScore(dealerCards)) + "");
         });
         grid.add(holdButton, 2, 1);
         
@@ -154,28 +156,31 @@ public class App extends Application {
         return triangle;
     }
 
-    private int getScore(Card[] cards) { //*  disallow CardJavaFX from being passed in ***FIX*** *//
+    private int getScore(CardJavaFX[] cards) {
         if (cards.length != 5) {
             throw new IllegalArgumentException("Card Array length should be 5");
         }
-        Card[] sortedCards = Card.sort(cards);
-
-        /*  First digit is the type of hand (high card, pair, two pair, three of a kind, straight, flush, full house, four of a kind, straight flush)
-            Second digit is the value of the highest pair card if there is 2 pairs
-            Third digit is the value of the first pair card or only pair card
-            Fourth digit is the value of the highest card that isnt part of a pair      */
+        /*  First digit is the type of hand (high card, pair, two pair, three of a kind, straight, flush, full house, four of a kind, straight flush, royal flush)
+        Second digit is the value of the highest pair card if there is 2 pairs
+        Third digit is the value of the first pair card or only pair card
+        Fourth digit is the value of the highest card that isnt part of a pair      */
         int score = 0x0000;
-        boolean sameSuit = false;
+        boolean sameSuit = true;
         boolean straight = false;
         boolean fourOfAKind = false;
         boolean fullHouse = false;
         boolean threeOfAKind = false;
         boolean twoPair = false;
         boolean pair = false;
-        int maxPair0 = 0;
-        int maxPair1 = 0;
-        int max = 0; // highest card that isnt part of a pair. 0 if all cards are part of a pair
+        int maxPair0 = 0x0;
+        int maxPair1 = 0x0;
+        int max = 0x0; // highest card that isnt part of a pair. 0 if all cards are part of a pair
 
+
+        Card[] sortedCards = new Card[5];
+        for (int i = 0; i < cards.length; i++) {
+            sortedCards[i] = cards[i].getCard();
+        }
         // convert ace to 14
         for (Card card : sortedCards) {
             if (card.getValue() == 1) {
@@ -189,30 +194,35 @@ public class App extends Application {
                 max = card.getValue();
             }
         }
-        score += max;
+
+        // sort the cards by descending value
+        sortedCards = Card.sort(sortedCards);
 
         // check for straight
         for (int i = 0; i < sortedCards.length - 1; i++) {
-            Card card = sortedCards[i];
-            Card nextCard = sortedCards[i + 1];
-            if (card.getValue() != nextCard.getValue() - 1) { break; }
-            if (i == sortedCards.length - 2) { straight = true; }
+            if (sortedCards[i].getValue() - sortedCards[i + 1].getValue() != 1) {
+                straight = false;
+                break;
+            }
+            straight = true;
         }
         
         
 
-        if (straight) {
-            if (sameSuit) {
-                score += 0x8000;
+        if (straight && sameSuit) {
+            if (sortedCards[0].getValue() == 14) {
+                score += 0x9000; // royal flush
             } else {
-                score += 0x4000;
+                score += 0x8000; // straight flush
             }
-        }else if (fourOfAKind) {
+        } else if (fourOfAKind) {
             score += 0x7000;
         } else if (fullHouse) {
             score += 0x6000;
         } else if (sameSuit) {
             score += 0x5000;
+        } else if (straight) {
+            score += 0x4000;
         } else if (threeOfAKind) {
             score += 0x3000;
         } else if (twoPair) {
@@ -222,6 +232,8 @@ public class App extends Application {
         } else {
             score += 0x0000; // high card
         }
+
+        score += max + maxPair1 * 16 + maxPair0 * 16 * 16; // add the highest card that isnt part of a pair
 
         return score;
     }

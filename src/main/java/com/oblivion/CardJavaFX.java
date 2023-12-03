@@ -1,5 +1,7 @@
 package com.oblivion;
 
+import com.oblivion.Card.Suit;
+
 import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
@@ -8,48 +10,50 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
 
-public class CardJavaFX extends Card {
+public class CardJavaFX {
     final private Rectangle rectangle;
     final private Label label = new Label();
     final private StackPane stackPane = new StackPane();
+    Card card;
     private boolean selected = false;
 
     // public void setRectangle(Rectangle rectangle) { this.rectangle = rectangle; }
     // public void setLabel(Label label) { this.label = label; }
 
     public CardJavaFX(Suit suit, int value, Rectangle rectangle) {
-        super(suit, value);
+        card = new Card(suit, value);
         this.rectangle = rectangle;
         initialize();
         stackPane.getChildren().addAll(rectangle, label);
     }
 
     public CardJavaFX(Rectangle rectangle) {
-        super();
+        card = new Card();
         this.rectangle = rectangle;
         initialize();
         stackPane.getChildren().addAll(rectangle, label);
     }
 
-    public Suit getSuit() { return suit; }
-    public int getValue() { return value; }
+    public Suit getSuit() { return card.getSuit(); }
+    public int getValue() { return card.getValue(); }
+    public Card getCard() { return card; }
     public Rectangle getRectangle() { return rectangle; }
     public Label getLabel() { return label; }
     public StackPane getStackPane() { return stackPane; }
 
     public void setSuit(Suit suit) {
-        this.suit = suit;
+        card.setSuit(suit);
         updateCardDisplay();
     }
 
     public void setValue(int value) {
-        this.value = value;
+        card.setValue(value);
         updateCardDisplay();
     }
 
     public void setCard(Card card) {
-        this.suit = card.getSuit();
-        this.value = card.getValue();
+        this.card.setSuit(card.getSuit());
+        this.card.setValue(card.getValue());
         updateCardDisplay();
     }
 
@@ -68,7 +72,7 @@ public class CardJavaFX extends Card {
     }
 
     public void updateCardDisplay() {
-        label.setText(suit.name().substring(0,1) + "\n" + value + "");
+        label.setText(card.getSuit().name().substring(0,1) + "\n" + card.getValue() + "");
     }
 
     public boolean isSelected() { return selected; }
